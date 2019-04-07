@@ -12,7 +12,7 @@
 <h1 id="开链"><a href="#开链" class="headerlink" title="开链"></a>开链</h1><p>A hash 到了 K, 这时 B 也 hash 到了 K, B 必须尝试新位置, 直到找到一个可用位置. 最简单的方法是 Linear Probing. K 被占了就去找 K+1, K+2… 这样有可能会导致部分的区块使用率很高, 所以一般来说用第二个或更多 hash function 来算出新位置会好点.</p>
 <p>多次 hash 可以更好地消除原有 key 分布的特征, 使得 key 可以均匀分布在 table 上. 因为 p 为碰撞概率, t 为 hash 次数, 多次 hash 的碰撞概率就是 p^t 了.</p>
 <p>但真正的问题在于, <strong>要怎么 look up 呢?</strong> 如果用了 10 次 hash 才将一个元素放进 table, 那么读取在最差的情况下需要 10 次 look up 才能确保元素不在这个集合内. 再多跳几次, 可能还不如直接上 O(log n) 的平衡树了呢.</p>
-<h1 id="Cuckoo-Hashing"><a href="#Cuckoo-Hashing" class="headerlink" title="Cuckoo Hashing"></a>Cuckoo Hashing</h1><p>Cuckoo Hashing 最精妙也是唯一一个改动是 kick out, <strong>将多次 hash 的 look up 压力分散到了多个 key 而非单一 key 上.</strong> A hash 到了 K, B 也 hash 到了 K, 发现已经被 A 占用了. 这时候尝试用第二种 hash function, 将 B hash 到了 M, 发现 M 也已经被占用了. 这时候可以任意将 K 或者 M 上的元素踢出来, 然后将 B 置入. 被踢出来的元素要继续尝试以上流程进行插入. 每个 key 最多存在于两个位置, 所以 look up 最多跳两次.</p>
+<h1 id="Cuckoo-Hashing"><a href="#Cuckoo-Hashing" class="headerlink" title="Cuckoo Hashing"></a>Cuckoo Hashing</h1><p>Cuckoo Hashing 最精妙也是唯一的改动是 kick out, <strong>将多次 hash 的 look up 压力分散到了多个 key 而非单一 key 上.</strong> A hash 到了 K, B 也 hash 到了 K, 发现已经被 A 占用了, 尝试用第二种 hash function, 将 B hash 到了 M, 发现 M 也已经被占用了. 这时可以任意将 K 或者 M 上的元素踢出来, 然后将 B 置入. 被踢出来的元素要继续尝试以上流程进行插入. 每个 key 最多存在于两个位置, 所以 look up 最多跳两次.</p>
 <p>这种不断踢出元素的过程, 会构成一幅图叫做 Cuckoo Graph, 只有很低概率会产生死循环. 原论文给出的结论是 2 个 hash function 在 load factor 在 50% 的情况下是可靠的, 如果是用 3 个 hash function, load factor 可以进一步提升至 91%.</p>
 <h1 id="Benchmark"><a href="#Benchmark" class="headerlink" title="Benchmark"></a>Benchmark</h1><p>工程实现上, 不大可能无限制 kick out. 我测试了下不同 kick 次数的表现.</p>
 <p>代码和输出较长, 先把结论写在这边.</p>
