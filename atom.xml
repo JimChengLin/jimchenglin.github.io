@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="/"/>
-  <updated>2019-04-14T18:39:05.384Z</updated>
+  <updated>2019-04-14T19:35:01.125Z</updated>
   <id>/</id>
   
   <author>
@@ -21,9 +21,13 @@
     <link href="/2019/04/15/FAST-2019-DistCache/"/>
     <id>/2019/04/15/FAST-2019-DistCache/</id>
     <published>2019-04-14T18:39:05.000Z</published>
-    <updated>2019-04-14T18:39:05.384Z</updated>
+    <updated>2019-04-14T19:35:01.125Z</updated>
+    
+    <content type="html"><![CDATA[<p>本周我读的最佳论文是 FAST 2019 DistCache. 缓存系统就和人生一样, 有时简单的小小变动就会产生巨大的意想不到的影响. /(ㄒoㄒ)/~~</p><a id="more"></a><p>DistCache 有两个背景知识非常有趣.</p><ul><li><p>Balls into bins 问题</p></li><li><p>The Power of Two Random Choices</p></li></ul><p>Balls into bins 问题讲的是如果有 M 个小球随机等概率地扔进 N 个垃圾桶, 那么装球最多的那个垃圾桶大概率会有多少个球?</p><p>我第一反应就是这应该是正态分布吧. 毕竟看起来就是一连串互相独立的随机决定. 可能正态分布的 bound 还不够 tight. 出于精力的原因, 我并没有去看数学推导过程. 这里直接列出结果.</p><p>\[ \theta ( log n / log log n ) \]</p>]]></content>
     
     <summary type="html">
+    
+      &lt;p&gt;本周我读的最佳论文是 FAST 2019 DistCache. 缓存系统就和人生一样, 有时简单的小小变动就会产生巨大的意想不到的影响. /(ㄒoㄒ)/~~&lt;/p&gt;
     
     </summary>
     

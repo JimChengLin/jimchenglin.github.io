@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2019/04/15/FAST-2019-DistCache/</loc>
+    
+    <lastmod>2019-04-14T19:35:01.125Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>/2019/04/07/Cuckoo-Hashing/</loc>
     
     <lastmod>2019-04-14T19:07:56.955Z</lastmod>
@@ -12,13 +19,6 @@
     <loc>/2019/04/05/%E6%9C%80%E8%BF%91%E7%9A%84%E8%BF%99%E4%B8%80%E5%B9%B4/</loc>
     
     <lastmod>2019-04-14T18:41:04.829Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>/2019/04/15/FAST-2019-DistCache/</loc>
-    
-    <lastmod>2019-04-14T18:39:05.384Z</lastmod>
     
   </url>
   
