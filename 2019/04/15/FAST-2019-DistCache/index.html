@@ -18,7 +18,7 @@
 <p>log d 是常数, 可忽略.</p>
 <p>\[ O ( \log \log n ) \]</p>
 <p>log log 32 = 1.2, 那么只要预留 20% 的资源就够了(忽略常数项的情况下 :-D). 震惊!</p>
-<p>最后一个是 LB 与 cache 的互补关系. 2 choices 可以解决无状态的 load balance 问题, 但这对存储不起作用. 因为 LB 没有办法按 load 分流, 比如 key A 存在服务器上 S 上, S 跑满了, LB 就能把 query redirect 到别的机器上吗?</p>
+<p>最后一个是 LB 与 cache 的互补关系. 2 choices 可以解决无状态的 load balance 问题, 但这对存储不起作用. 因为 LB 没有办法按 load 分流, 比如 key A 存在服务器 S 上, S 跑满了, LB 就能把 query redirect 到别的机器上吗?</p>
 <p>Small Cache, Big Effect 这篇 paper 很大程度上解决了这个问题. LB 与 cache layer 存在很强的互补关系. LB 讨厌 imbalance, 但 cache 喜欢. query 越 skew, cache 效率越高.</p>
 <p>我们当然知道绝大绝大多数情况下 cache 越多, 系统性能越好(除非 network 是瓶颈), 那么在一个多 node 的存储系统, cache 至少要多少才有足够的信心说这个系统没有热点呢? paper 给出的答案吓死人了! 居然只要 O(n log n)! n 是 node 数量.</p>
 <p>WTF? 居然与 key 的数量无关? 那假如有一亿个 key, 4 个节点, 岂不是只要 cache 6 组 key 就够? 这太反直觉了. 但看了推导居然觉得还是很容易理解的. 作者构造了一组恶意 query 来模拟最差的情况, 然后做了些高中程度的数学消元就好了.</p>
