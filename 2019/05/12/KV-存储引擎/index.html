@@ -11,7 +11,7 @@
 <li><p>序列化并持久化映射</p>
 </li>
 </ul>
-<p>Python 内置的 shelve 库也可以叫做一个存储引擎, 只是实现比较 naive. 现在想来当时的我也很 naive, 用着 Windows + Wing Python IDE + 微软雅黑. 槽点在于微软雅黑, 那时我觉得这世界上最好的编程字体就是它了吧. 直到我很久之后才发现等宽字体是多么的重要...</p>
+<p>Python 内置的 shelve 库也可以叫做一个存储引擎, 只是实现比较 naive. 现在想来当时的我也很 naive, 用着 Windows + Wing Python IDE + 微软雅黑. 槽点在于微软雅黑, 那时我觉得这世界上最好的编程字体就是它了吧. 直到很久之后我才发现等宽字体是多么的重要...</p>
 <h2 id="存储引擎的实现"><a href="#存储引擎的实现" class="headerlink" title="存储引擎的实现"></a>存储引擎的实现</h2><h3 id="Python-shelve-库"><a href="#Python-shelve-库" class="headerlink" title="Python shelve 库"></a>Python shelve 库</h3><p>shelve 是没有硬盘索引概念的, 一切的映射都维护在一个字典里.</p>
 <p>比如,</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> shelve</span><br><span class="line"></span><br><span class="line">d = shelve.open(filename) <span class="comment"># open -- file may get suffix added by low-level</span></span><br><span class="line">                          <span class="comment"># library</span></span><br><span class="line"></span><br><span class="line">d[key] = data   <span class="comment"># store data at key (overwrites old data if</span></span><br><span class="line">                <span class="comment"># using an existing key)</span></span><br><span class="line">data = d[key]   <span class="comment"># retrieve a COPY of data at key (raise KeyError if no</span></span><br><span class="line">                <span class="comment"># such key)</span></span><br><span class="line"><span class="keyword">del</span> d[key]      <span class="comment"># delete data stored at key (raises KeyError</span></span><br><span class="line">                <span class="comment"># if no such key)</span></span><br></pre></td></tr></table></figure>
@@ -37,13 +37,13 @@
 <p>我实现完之后简直震惊了! Amazing! 我怎么这么厉害??? 我才初学编程就写出这么一个性能, 功能吊打标准库的程序, 我岂不是天才? 后来才发现想法一叫做 WAL(write ahead log), 想法二叫做 Compaction. 二者的年龄可能比我父母还大.</p>
 <p>轮胎是圆的, 那是因为只能是圆的. 虽然流言终结者真的做过正方形轮胎... JPickle 已经具有了存储引擎的雏形了,</p>
 <ul>
-<li><p>一般的存储引擎都需要有一个 WAL / redo log / double write buffer 来确保操作的原子性和持久性</p>
+<li><p>一般的存储引擎都需要有一个 WAL / redo log 来确保操作的原子性和持久性</p>
 </li>
-<li><p>如果输入不是定长和定量的数据(99.9% 的情况), 存储空间的碎片化是不可避免的. 合格的存储引擎应该尽量回收碎片化的空间.</p>
+<li><p>如果输入不是定长和定量的数据(99.9% 的情况), 存储空间的碎片化是不可避免的. 合格的存储引擎应该尽量回收碎片空间.</p>
 </li>
 </ul>
 <h2 id="存储引擎索引"><a href="#存储引擎索引" class="headerlink" title="存储引擎索引"></a>存储引擎索引</h2><p>shelve, JPickle, BitCask 都选择了比较简单的索引实现, 索引整个都放在内存里. 但面对海量数据的时候, 很有可能索引是放不进内存里的, 所以必须要在硬盘上直接建立索引. 硬盘索引有两大家族.</p>
-<h3 id="B-Tree-家族"><a href="#B-Tree-家族" class="headerlink" title="B-Tree 家族"></a>B-Tree 家族</h3><p>B-Tree 以及其变种 B+-Tree 的算法流程可以自行了解. 其合理性在于硬盘, 无论是 HDD 还是 SSD 都是块设备, 一次读取最少读一块. HDD 一般是 512bytes, 称之为一个扇区(sector). SSD 则比较多样, 一般最少 4KB 称之为 page. 此外 HDD 还有很高的寻道时间, 一般在 10ms 左右.</p>
+<h3 id="B-Tree-家族"><a href="#B-Tree-家族" class="headerlink" title="B-Tree 家族"></a>B-Tree 家族</h3><p>B-Tree 以及其变种如 B+-Tree 的算法流程可以自行了解. 其合理性在于硬盘, 无论是 HDD 还是 SSD 都是块设备, 一次读取最少读一块. HDD 一般是 512bytes, 称之为一个扇区(sector). SSD 则比较多样, 一般最少 4KB 称之为 page. 此外 HDD 还有很高的寻道时间, 一般在 10ms 左右.</p>
 <p>因此对于硬盘来说, 读 8bytes 与读 4KB 是没有什么差别的. 将传统的红黑树 / AVL 树的小节点拍扁合并成接近硬盘块大小甚至更大的块的树就是 B-Tree. 千万级别的元素数量, 对于 B-Tree 来说, 只要跳转大约 4 次左右就够了. 换作二叉平衡树则要 20+ 次.</p>
 <p>B-Tree 的最大深度为<br>\[ O(log_k n) \]</p>
 <p>k 为单个 B-Tree 节点的 key 最大数量 / 2, 越大的 B-Tree 节点的 k 越大, 单节点读取时间越长, 但查询和修改需要跳转的次数越少. InnoDB 节点默认大小为 64KB.</p>
@@ -51,7 +51,7 @@
 <ul>
 <li>写延迟与难以进行 Batch 优化</li>
 </ul>
-<p>假设要插入 key a, 在千万级别的 B-Tree 中大概率需要读 4 次节点, 以找到最接近 a 的已知 key. 一次写入操作 = 一次读取操作 + 可能的节点分裂 + 节点插入. 写速度 &lt;= 读速度. 这对于写多读少的场景, 比如 Google 的爬虫索引更新是不可接受的. 一个页面更新了, 搜索引擎并不需要立刻反应到搜索结果上, 更理想的是变更操作能攒起来, 然后大批量处理.</p>
+<p>假设要插入 key a, 在千万级别的 B-Tree 中大概率需要读 4 次节点, 以找到最接近 a 的已知 key. 一次写入操作 = 一次读取操作 + 可能的节点分裂 + 节点插入. 写速度恒 &lt;= 读速度. 这对于写多读少的场景, 比如 Google 的爬虫索引更新是不可接受的. 一个页面更新了, 搜索引擎并不需要立刻反应到搜索结果上, 更理想的是变更操作能攒起来, 然后大批量处理.</p>
 <ul>
 <li>写放大与 SSD 的随机写 GC</li>
 </ul>
@@ -65,11 +65,11 @@
 </ul>
 <p>传统 B-Tree 只能保证至少 1/2 的空间是被利用的.</p>
 <h3 id="LSMT-家族"><a href="#LSMT-家族" class="headerlink" title="LSMT 家族"></a>LSMT 家族</h3><p>LSMT 是 Log-Structured Merge Tree 的缩写, 代表是由 Google 传奇程序员 Jeff Dean 实现的 LevelDB. LevelDB 是 Google GFS / BigTable 的基石. 相比于 197X 年就提出的 B-Tree, LSMT 大约在 2000 年才有了第一个可靠的实现(LevelDB).</p>
-<p>究其原因我认为是 LSMT 在理论上先天是不美的, 这是一个工程师才会喜欢的数据结构. 简单概括下逻辑就是放弃数据的全局有序性, 只确保在某一块内的数据有序, 通过限制 key 重叠区间的块的数量来保证读取速度. 细节可以 wiki. 在最差情况下(输入的 key 都和现有块的区间重叠造成雪崩式 Compaction), LSMT 表现糟糕得一塌糊涂. 除此之外, LSMT 剩下的就都是优点了.</p>
+<p>究其原因, 我认为是 LSMT 在理论上先天是不美的, 这是一个工程师才会喜欢的数据结构. 简单概括下逻辑就是放弃数据的全局有序性, 只确保在某一块内的数据有序, 通过限制 key 区间重叠的块的数量来保证读取速度. 细节可以 wiki. 在最差情况下(输入的 key 都和现有块的区间重叠造成雪崩式 Compaction), LSMT 表现糟糕得一塌糊涂. 除此之外, LSMT 剩下的就都是优点了.</p>
 <ul>
 <li>逻辑简单, 分层清楚, 易于优化</li>
 </ul>
-<p>MemTable, IMMemTable, SSTable 可以看成三个独立的组件, 分开优化. Compaction 只需要处理 IMMemTable 和 SSTable 这种 immutable 的数据结构. 这个就好像 Raft v.s. Multi-Paxos. Raft 看似限制多, 但因为它实现简单, 工程师反而有更多的信心去优化.</p>
+<p>MemTable, IMMemTable, SSTable 可以看成三个独立的组件. Compaction 只需要处理 IMMemTable 和 SSTable 这种 immutable 的数据结构. 这个就好像 Raft v.s. Multi-Paxos. Raft 看似限制多, 但因为它实现简单, 工程师反而有更多的信心去优化.</p>
 <ul>
 <li>空间利用率高</li>
 </ul>
@@ -84,20 +84,20 @@
 <li><p>通过保证局部有序实现写操作无阻塞</p>
 </li>
 </ul>
-<p>这个是 LSMT 的精髓. 对于全局有序的数据结构, 读和写是需要立刻完成的. LSMT 外加了一个 Compaction 操作, 使得写不再依赖读了, 无阻塞. Compaction 成了一个平衡读写性能的中间操作. 根据场景不同, LSMT 可以用不同的 Compaction 参数. 比如, 读很重要, 那么就可以提升 Compaction 的频率.</p>
+<p>这个是 LSMT 的精髓. 对于全局有序的数据结构, 读和写是需要立刻完成的. LSMT 外加了一个 Compaction 操作, 使得写不再依赖读了, 达成无阻塞. Compaction 成了一个平衡读写性能的中间操作. 根据场景不同, LSMT 可以用不同的 Compaction 参数. 比如, 读很重要, 那么就可以提升 Compaction 的频率.</p>
 <h2 id="读写引擎的未来"><a href="#读写引擎的未来" class="headerlink" title="读写引擎的未来"></a>读写引擎的未来</h2><p>由于有 RocksDB 这个优秀的开源 LSMT KV 存储引擎实现, 使用 RocksDB 基本上已经是开源社区的主流选择了, 比如 TiKV, CockroachDB, Pika. 但是不是 RocksDB 就没别的读写引擎能挑战了呢?</p>
 <p>我觉得不是的. 一些 LSMT 很科学的假设在飞速发展的存储技术面前已经有些失效了.</p>
 <ul>
-<li><p>随机读比顺序读慢很多 ❎ Intel P4510 4 KB 随机吞吐 <em>5 GB/s，64 MB 顺序吞吐 </em>9 GB/s</p>
+<li><p>随机读比顺序读慢很多 ❎ Intel P4510 4 KB 随机吞吐 2.5 GB/s, 64 MB 顺序吞吐 2.9 GB/s</p>
 </li>
-<li><p>持久化的 IO 设备不是 Byte-Addressable 的 ❎ NVM 与内存没有差别，支持 load 与 store 操作</p>
+<li><p>持久化的 IO 设备不是 Byte-Addressable 的 ❎ NVM 与内存没有差别, 支持 load 与 store 操作</p>
 </li>
 </ul>
 <p>新思路</p>
 <ul>
-<li><p>Wisckey（类似 BitCask），key 存储在 LSMT 中，value 存储在 value log 里，充分利用 SSD 强悍的随机读取能力</p>
+<li><p>Wisckey(类似 BitCask), key 存储在 LSMT 中, value 存储在 value log 里, 充分利用 SSD 强悍的随机读取能力</p>
 </li>
-<li><p>BzTree，直接在 NVM 上用 CAS 操作进行存储</p>
+<li><p>BzTree, 直接在 NVM 上用 CAS 操作进行存储</p>
 </li>
 </ul>
 <p>除了存储设备上的快速发展, RocksDB 本身的结构在云时代也存在许多局限.</p>
@@ -111,5 +111,5 @@
 <li><p>多线程阻塞 IO 模型</p>
 </li>
 </ul>
-<p>尤其是多线程阻塞 IO 模型, 这一定会导致 RocksDB 整个重写. 我自己测试, 阻塞 IO 需要 128 个线程才比得上 libaio 的 8 个线程, 而 Linux Kernel 5.1 又加入了 <strong>io_uring</strong>, 性能相对于 libaio 又大幅度提升. 或许等 Ubuntu / Debian 有 5.1 内核的 LTS 发行版的时候, 我就可以去创业了? 专做高性能 KV 存储🤔. 等有了 io_uring, RocksDB 就真的可以退休了...</p>
+<p>尤其是多线程阻塞 IO 模型, 这一定会导致 RocksDB 整个重写. 我自己测试, 阻塞 IO 需要 128 个线程才比得上 libaio 的 8 个线程, 而 Linux Kernel 5.1 又加入了 <strong>io_uring</strong>, 性能相对于 libaio 又大幅度提升. 或许等 Ubuntu / Debian 有 5.1 内核的 LTS 发行版的时候, 我就可以去创业了? 专做高性能 KV 存储🤔.</p>
 </div></article></div></main><footer><div class="paginator"><a href="/2019/05/03/雾计算第一期-高中知识回顾/" class="next">NEXT</a></div><div class="copyright"><p>© 2018 - 2019 <a href>Jim Lin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script></body></html>
