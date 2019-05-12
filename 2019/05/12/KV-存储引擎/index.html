@@ -73,9 +73,9 @@
 <ul>
 <li>空间利用率高</li>
 </ul>
-<p>LSMT 会频繁 Compaction, 这样被删除的 key 占用的空间就得到了释放. 同时 SSTable 可以用更激进的块压缩(zstd)进一步节约空间.</p>
+<p>LSMT 会频繁 Compaction, 这样被删除的 key 占用的空间就得到了释放. 同时 SSTable 可以用更激进的块压缩(e.g. zstd)进一步节约空间.</p>
 <ul>
-<li>数据冷热分层, Cache 利用率高</li>
+<li>数据冷热分层, cache 利用率高</li>
 </ul>
 <p>数据天然存在时间和空间连续性. 热 key 一般在上层, cache 不容易 miss. 那么对于热 key 来说, 读很大概率都是 O(1) 的.</p>
 <ul>
@@ -90,12 +90,12 @@
 <ul>
 <li><p>随机读比顺序读慢很多 ❎ Intel P4510 4 KB 随机吞吐 2.5 GB/s, 64 MB 顺序吞吐 2.9 GB/s</p>
 </li>
-<li><p>持久化的 IO 设备不是 Byte-Addressable 的 ❎ NVM 与内存没有差别, 支持 load 与 store 操作</p>
+<li><p>持久化 IO 设备不是 Byte-Addressable 的 ❎ NVM 与内存没有差别, 支持 load 与 store 操作</p>
 </li>
 </ul>
 <p>新思路</p>
 <ul>
-<li><p>Wisckey(类似 BitCask), key 存储在 LSMT 中, value 存储在 value log 里, 充分利用 SSD 强悍的随机读取能力</p>
+<li><p>Wisckey, key 存储在 LSMT 中, value 存储在 value log 里, 充分利用 SSD 强悍的随机读取能力</p>
 </li>
 <li><p>BzTree, 直接在 NVM 上用 CAS 操作进行存储</p>
 </li>
@@ -106,10 +106,8 @@
 </li>
 <li><p>多实例同步</p>
 </li>
-<li><p>数据冷热分离</p>
-</li>
 <li><p>多线程阻塞 IO 模型</p>
 </li>
 </ul>
-<p>尤其是多线程阻塞 IO 模型, 这一定会导致 RocksDB 整个重写. 我自己测试, 阻塞 IO 需要 128 个线程才比得上 libaio 的 8 个线程, 而 Linux Kernel 5.1 又加入了 <strong>io_uring</strong>, 性能相对于 libaio 又大幅度提升. 或许等 Ubuntu / Debian 有 5.1 内核的 LTS 发行版的时候, 我就可以去创业了? 专做高性能 KV 存储🤔.</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/05/03/雾计算第一期-高中知识回顾/" class="next">NEXT</a></div><div class="copyright"><p>© 2018 - 2019 <a href>Jim Lin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script></body></html>
+<p>尤其是多线程阻塞 IO 模型, 这一定会导致 RocksDB 整个重写. 我自己测试 P4510, 阻塞 IO 需要 128 个线程才比得上 libaio 的 8 个线程, 而 Linux Kernel 5.1 又加入了 <strong>io_uring</strong>, 性能相对于 libaio 又大幅度提升. 或许等 Ubuntu / Debian 有 5.1 内核的 LTS 发行版的时候, 我就可以去创业了? 专做高性能 KV 存储🤔.</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2019/05/03/雾计算第一期-高中知识回顾/" class="next">下一篇</a></div><div class="copyright"><p>© 2018 - 2019 <a href>Jim Lin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script></body></html>
