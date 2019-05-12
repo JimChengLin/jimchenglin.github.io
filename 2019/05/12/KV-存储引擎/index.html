@@ -16,32 +16,32 @@
 <p>比如,</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> shelve</span><br><span class="line"></span><br><span class="line">d = shelve.open(filename) <span class="comment"># open -- file may get suffix added by low-level</span></span><br><span class="line">                          <span class="comment"># library</span></span><br><span class="line"></span><br><span class="line">d[key] = data   <span class="comment"># store data at key (overwrites old data if</span></span><br><span class="line">                <span class="comment"># using an existing key)</span></span><br><span class="line">data = d[key]   <span class="comment"># retrieve a COPY of data at key (raise KeyError if no</span></span><br><span class="line">                <span class="comment"># such key)</span></span><br><span class="line"><span class="keyword">del</span> d[key]      <span class="comment"># delete data stored at key (raises KeyError</span></span><br><span class="line">                <span class="comment"># if no such key)</span></span><br></pre></td></tr></table></figure>
 <p><code>d[key] = data</code>, 实质上是把 data append 到某个文件, 然后把 data 在那个文件上 offset 以 <code>index[key] = data_offset</code> 的形式存在内存字典里.</p>
-<p><code>data = d[key]</code> 的流程是从 index 读出 offset, 然后用 pickle.load 在文件的特定位置读出 value 返回.</p>
-<p>这种做法我们时兴叫做 <code>BitCask</code>, 即 key 和 offset 放内存, 再通过 offset 读硬盘得到 value. 说实话我不是很明白为什么这么简单的设计的冠名权给了 <code>BitCask</code>.</p>
-<h2 id="JPickle"><a href="#JPickle" class="headerlink" title="JPickle"></a>JPickle</h2><p>这是我实现的库, 代码已经遗失了, 还挺可惜的. sheve 有两个重大的问题,</p>
+<p><code>data = d[key]</code> 的流程是从 index 读出 offset, 然后用 pickle.load 在文件的特定位置反序列化出 value 返回.</p>
+<p>这种做法时兴叫做 <code>BitCask</code>, 即 key 和 offset 放内存, 再通过 offset 读硬盘得到 value. 说实话我不是很明白为什么这么简单的设计的冠名权给了 <code>BitCask</code>.</p>
+<h2 id="JPickle"><a href="#JPickle" class="headerlink" title="JPickle"></a>JPickle</h2><p>这是我实现的库, 代码已经遗失了, 还挺可惜的. shelve 有两个重大的问题,</p>
 <ul>
 <li>shelve 没有断电保护</li>
 </ul>
-<p>当 <code>d[key] = data</code> 之后, 程序崩溃或者电脑断电了, shelve 的数据就丢了, 除非每次变更完都来一遍 <code>d.sync()</code>, 把 key -&gt; offset 的索引固化在硬盘上(value 已经是实时 append 的了). 所谓索引固化就是把整个索引重 pickle.dump 一遍... 想象一下, 为了写 1KB 的数据, 就要重写 1MB 索引的可怕...</p>
+<p>当 <code>d[key] = data</code> 之后, 程序崩溃或者电脑断电了, shelve 的数据就丢了, 除非每次变更完都来一遍 <code>d.sync()</code>, 把 key -&gt; offset 的索引固化在硬盘上(value 已经是实时 append 的了). 所谓固化就是把整个索引重新 pickle.dump 一遍... 想象一下, 为了写 1KB 的数据, 就要重写 1MB 索引的可怕...</p>
 <ul>
 <li>shelve 没有垃圾回收</li>
 </ul>
 <p><code>del d[key]</code> 对于 shelve 来说是根本不回收硬盘空间的, 随着使用时间的增长, 空间占用快速单调递增.</p>
 <p>我当时想得太多, 学得太少, 琢磨出了两个主意,</p>
-<ol>
+<ul>
 <li><p>每做一个变更, 我就把这个变更写进一个日志里, 然后即使断电了, 也可以通过回放日志来保持数据的安全性</p>
 </li>
 <li><p>建立一个垃圾回收的机制. 一旦有数据被删了, 就把被删掉的那个段标记为 dirty. 如果之后有数据刚好可以写进这个段, 就可以复用空间. 碎片化严重的话, 再进行完全重写.</p>
 </li>
-</ol>
+</ul>
 <p>我实现完之后简直震惊了! Amazing! 我怎么这么厉害??? 我才初学编程就写出这么一个性能, 功能吊打标准库的程序, 我岂不是天才? 后来才发现想法一叫做 WAL(write ahead log), 想法二叫做 Compaction. 二者的年龄可能比我父母还大.</p>
 <p>轮胎是圆的, 那是因为只能是圆的. 虽然流言终结者真的做过正方形轮胎... JPickle 已经具有了存储引擎的雏形了,</p>
-<ol>
+<ul>
 <li><p>一般的存储引擎都需要有一个 WAL / redo log / double write buffer 来确保操作的原子性和持久性</p>
 </li>
 <li><p>如果输入不是定长和定量的数据(99.9% 的情况), 存储空间的碎片化是不可避免的. 合格的存储引擎应该尽量回收碎片化的空间.</p>
 </li>
-</ol>
+</ul>
 <h2 id="存储引擎索引"><a href="#存储引擎索引" class="headerlink" title="存储引擎索引"></a>存储引擎索引</h2><p>shelve, JPickle, BitCask 都选择了比较简单的索引实现, 索引整个都放在内存里. 但面对海量数据的时候, 很有可能索引是放不进内存里的, 所以必须要在硬盘上直接建立索引. 硬盘索引有两大家族.</p>
 <h3 id="B-Tree-家族"><a href="#B-Tree-家族" class="headerlink" title="B-Tree 家族"></a>B-Tree 家族</h3><p>B-Tree 以及其变种 B+-Tree 的算法流程可以自行了解. 其合理性在于硬盘, 无论是 HDD 还是 SSD 都是块设备, 一次读取最少读一块. HDD 一般是 512bytes, 称之为一个扇区(sector). SSD 则比较多样, 一般最少 4KB 称之为 page. 此外 HDD 还有很高的寻道时间, 一般在 10ms 左右.</p>
 <p>因此对于硬盘来说, 读 8bytes 与读 4KB 是没有什么差别的. 将传统的红黑树 / AVL 树的小节点拍扁合并成接近硬盘块大小甚至更大的块的树就是 B-Tree. 千万级别的元素数量, 对于 B-Tree 来说, 只要跳转大约 4 次左右就够了. 换作二叉平衡树则要 20+ 次.</p>
@@ -88,7 +88,7 @@
 <h2 id="读写引擎的未来"><a href="#读写引擎的未来" class="headerlink" title="读写引擎的未来"></a>读写引擎的未来</h2><p>由于有 RocksDB 这个优秀的开源 LSMT KV 存储引擎实现, 使用 RocksDB 基本上已经是开源社区的主流选择了, 比如 TiKV, CockroachDB, Pika. 但是不是 RocksDB 就没别的读写引擎能挑战了呢?</p>
 <p>我觉得不是的. 一些 LSMT 很科学的假设在飞速发展的存储技术面前已经有些失效了.</p>
 <ul>
-<li><p>随机读比顺序读慢很多 ❎ Intel P4510 4 KB 随机吞吐 2.5 GB/s，64 MB 顺序吞吐 2.9 GB/s</p>
+<li><p>随机读比顺序读慢很多 ❎ Intel P4510 4 KB 随机吞吐 <em>5 GB/s，64 MB 顺序吞吐 </em>9 GB/s</p>
 </li>
 <li><p>持久化的 IO 设备不是 Byte-Addressable 的 ❎ NVM 与内存没有差别，支持 load 与 store 操作</p>
 </li>
