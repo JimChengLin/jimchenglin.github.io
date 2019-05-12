@@ -3,7 +3,7 @@
 <h2 id="存储引擎是什么"><a href="#存储引擎是什么" class="headerlink" title="存储引擎是什么"></a>存储引擎是什么</h2><p>存储引擎看起来非常高大上, 其实干的事情真的很简单. 我写的第一个破百行的程序叫做 JPickle, J 是我英文名 Jim 的首字母, Pickle 代表着 Python 内置的序列化库 pickle. 它干了一件什么事呢? 它可以实时序列化一个类 dict 的对象.</p>
 <p>比如,</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = JPickle(<span class="string">"/tmp/my_engine"</span>)</span><br><span class="line">a[<span class="string">'name'</span>] = <span class="string">'jim'</span></span><br></pre></td></tr></table></figure>
-<p>`name = jim` 这个信息就被存储到了 `/tmp/my_engine` 这个文件里, 下次只要再用 JPickle 打开同一个文件, 就可以读出 `name` 的值是 `jim`.</p>
+<p><code>name = jim</code> 这个信息就被存储到了 <code>/tmp/my_engine</code> 这个文件里, 下次只要再用 JPickle 打开同一个文件, 就可以读出 <code>name</code> 的值是 <code>jim</code>.</p>
 <p>存储引擎是不是很简单? 做的事情在我看来就两件,</p>
 <ul>
 <li><p>维持一个映射关系, 比如 Key -&gt; Value, Key -&gt; Document</p>
@@ -15,18 +15,18 @@
 <h2 id="存储引擎的实现"><a href="#存储引擎的实现" class="headerlink" title="存储引擎的实现"></a>存储引擎的实现</h2><h3 id="Python-shelve-库"><a href="#Python-shelve-库" class="headerlink" title="Python shelve 库"></a>Python shelve 库</h3><p>shelve 是没有硬盘索引概念的, 一切的映射都维护在一个字典里.</p>
 <p>比如,</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> shelve</span><br><span class="line"></span><br><span class="line">d = shelve.open(filename) <span class="comment"># open -- file may get suffix added by low-level</span></span><br><span class="line">                          <span class="comment"># library</span></span><br><span class="line"></span><br><span class="line">d[key] = data   <span class="comment"># store data at key (overwrites old data if</span></span><br><span class="line">                <span class="comment"># using an existing key)</span></span><br><span class="line">data = d[key]   <span class="comment"># retrieve a COPY of data at key (raise KeyError if no</span></span><br><span class="line">                <span class="comment"># such key)</span></span><br><span class="line"><span class="keyword">del</span> d[key]      <span class="comment"># delete data stored at key (raises KeyError</span></span><br><span class="line">                <span class="comment"># if no such key)</span></span><br></pre></td></tr></table></figure>
-<p>`d[key] = data`, 实质上是把 data append 到某个文件, 然后把 data 在那个文件上 offset 以 `index[key] = data_offset` 的形式存在内存字典里.</p>
-<p>`data = d[key]` 的流程是从 index 读出 offset, 然后用 pickle.load 在文件里读出 value 返回.</p>
-<p>这种做法我们时兴叫做 `BitCask`, 即 key 和 offset 放内存, 再通过 offset 读硬盘得到 value. 说实话我不是很明白为什么这么初级设计的冠名权给了 `BitCask`...</p>
+<p><code>d[key] = data</code>, 实质上是把 data append 到某个文件, 然后把 data 在那个文件上 offset 以 <code>index[key] = data_offset</code> 的形式存在内存字典里.</p>
+<p><code>data = d[key]</code> 的流程是从 index 读出 offset, 然后用 pickle.load 在文件里读出 value 返回.</p>
+<p>这种做法我们时兴叫做 <code>BitCask</code>, 即 key 和 offset 放内存, 再通过 offset 读硬盘得到 value. 说实话我不是很明白为什么这么初级设计的冠名权给了 <code>BitCask</code>...</p>
 <h2 id="JPickle"><a href="#JPickle" class="headerlink" title="JPickle"></a>JPickle</h2><p>这是我实现的库, 代码已经遗失了, 还挺可惜的... sheve 有两个重大的问题,</p>
 <ul>
 <li>shelve 没有断电保护</li>
 </ul>
-<p>当 ` d[key] = data` 之后, 程序崩溃或者电脑断电了, shelve 的数据就丢了, 除非每次变更完都来一遍 `d.sync()`, 把 key -&gt; offset 的索引固化在硬盘上(value 是实时 append 的). 这个实现也非常感人, 就是把整个索引重 pickle,dump 一遍... 想象一下, 为了写 1KB 的数据, 就要重写 1MB 索引的可怕...</p>
+<p>当 <code>d[key] = data</code> 之后, 程序崩溃或者电脑断电了, shelve 的数据就丢了, 除非每次变更完都来一遍 <code>d.sync()</code>, 把 key -&gt; offset 的索引固化在硬盘上(value 是实时 append 的). 这个实现也非常感人, 就是把整个索引重 pickle,dump 一遍... 想象一下, 为了写 1KB 的数据, 就要重写 1MB 索引的可怕...</p>
 <ul>
 <li>shelve 没有垃圾回收</li>
 </ul>
-<p>`del d[key]` 对于 shelve 来说是根本不回收硬盘空间的, 随着使用时间的增长, 这引擎的空间占用就会非常大.</p>
+<p><code>del d[key]</code> 对于 shelve 来说是根本不回收硬盘空间的, 随着使用时间的增长, 这引擎的空间占用就会非常大.</p>
 <p>我当时想得太多, 学得太少, 想了了两个主意,</p>
 <ol>
 <li><p>每做一个变更, 我就把这个变更写进一个日志里, 然后即使断电了, 也可以通过回放日志来保持数据的安全性</p>
@@ -111,5 +111,5 @@
 <li><p>多线程阻塞 IO 模型</p>
 </li>
 </ul>
-<p>尤其是多线程阻塞 IO 模型, 这一定会导致 RocksDB 整个重写. 我自己测试阻塞 IO 需要 128 个线程才比得上 libaio 的非阻塞 IO 8 个线程, 而 Linux Kernel 5.1 又加入了 <strong>io_uring</strong>, 性能对于 libaio 又大幅度提升. 或许等 Ubuntu / Debian 有 5.1 内核的 LTS 的发行版的时候, 我就可以去创业了? :-D 从我的角度来看, 等有了 io_uring, 那 RocksDB 就真的老了...</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/05/03/雾计算第一期-高中知识回顾/" class="next">NEXT</a></div><div class="copyright"><p>© 2018 - 2019 <a href>Jim Lin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script></body></html>
+<p>尤其是多线程阻塞 IO 模型, 这一定会导致 RocksDB 整个重写. 我自己测试阻塞 IO 需要 128 个线程才比得上 libaio 的非阻塞 IO 8 个线程, 而 Linux Kernel 5.1 又加入了 <strong>io_uring</strong>, 性能对于 libaio 又大幅度提升. 或许等 Ubuntu / Debian 有 5.1 内核的 LTS 的发行版的时候, 我就可以去创业了? 专做高性能 KV 存储🤔. 从我的角度来看, 等有了 io_uring, RocksDB 就真的老了...</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2019/05/03/雾计算第一期-高中知识回顾/" class="next">下一篇</a></div><div class="copyright"><p>© 2018 - 2019 <a href>Jim Lin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script></body></html>
