@@ -7,7 +7,7 @@
 <ol>
 <li><p>高性能计算, 如非必要, 请用 C++</p>
 </li>
-<li><p>一定要用 Go 计算, 请不要写小段的汇编来回调, 应该直接用汇编实现一个大功能, 比如 CRC32C 之类的</p>
+<li><p>一定要用 Go 计算, 请不要写小段的汇编来回调, 应该直接用汇编实现一个大功能, 比如 CRC</p>
 </li>
 </ol>
 <h3 id="Intel-TSX-指令集"><a href="#Intel-TSX-指令集" class="headerlink" title="Intel TSX 指令集"></a>Intel TSX 指令集</h3><p>Transactional Memory 是把数据库的事务的概念引入内存, 一连串的操作要么全部成功, 要么全部失败, 不存在中间态. 为什么直接用硬件处理很合理呢? 因为硬件可以以最小粒度来分析事件依赖. 假设, 我是一个头脑简单的程序员, 我很可能直接一把大锁锁全家, 但在硬件层面来看, 只有一个 cache line 的数据是存在竞争的. 那为啥不直接把判断竞争的任务下推?</p>
@@ -17,11 +17,11 @@
 <p>TSX 指令集最大的意义在于它让不可能成为了可能, 无锁双向链表在我看来基本是不可能的. TSX 指令集做到了这一点. 看我的代码会发现我的 TSX 版代码非常非常简单. 后面, 我写了大概半小时的 fine grained locking 版本的双向链表, 还没写对 T_T.</p>
 <p>总结,</p>
 <ol>
-<li><p>如果非要用无锁, 但那个数据结构没有对应的无锁版本, 可以考虑使用</p>
+<li><p>如果非要用无锁, 但那个数据结构没有对应的无锁版本, 可以考虑使用 TSX</p>
 </li>
-<li><p>如果 contention 非常小, 基本上就是一个单写多读的场景, 可以考虑使用</p>
+<li><p>如果 contention 非常小, 基本上就是一个单写多读的场景, 可以考虑使用 TSX</p>
 </li>
-<li><p>如果真的很懒, 懒得处理糟心的死锁, 可以考虑使用</p>
+<li><p>如果真的很懒, 懒得处理糟心的死锁, 可以考虑使用 TSX</p>
 </li>
 </ol>
 </div></article></div></main><footer><div class="paginator"><a href="/2019/05/12/KV-存储引擎/" class="next">NEXT</a></div><div class="copyright"><p>© 2018 - 2019 <a href>Jim Lin</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script></body></html>
