@@ -2,30 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>/2019/05/12/KV-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/</loc>
+    <loc>/2019/07/21/Go-Plan9-%E6%B1%87%E7%BC%96%E4%B8%8E-Intel-TSX-%E6%8C%87%E4%BB%A4%E9%9B%86/</loc>
     
-    <lastmod>2019-05-12T16:44:14.488Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>/2019/04/07/Cuckoo-Hashing/</loc>
-    
-    <lastmod>2019-05-12T16:09:44.858Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>/2019/04/15/FAST-2019-DistCache/</loc>
-    
-    <lastmod>2019-05-03T16:19:59.699Z</lastmod>
+    <lastmod>2019-07-21T12:43:43.871Z</lastmod>
     
   </url>
   
   <url>
     <loc>/2019/05/03/%E9%9B%BE%E8%AE%A1%E7%AE%97%E7%AC%AC%E4%B8%80%E6%9C%9F-%E9%AB%98%E4%B8%AD%E7%9F%A5%E8%AF%86%E5%9B%9E%E9%A1%BE/</loc>
     
-    <lastmod>2019-05-03T14:47:34.330Z</lastmod>
+    <lastmod>2019-07-21T11:09:07.242Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>/2019/04/07/Cuckoo-Hashing/</loc>
+    
+    <lastmod>2019-07-21T11:08:58.033Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>/2019/04/15/FAST-2019-DistCache/</loc>
+    
+    <lastmod>2019-07-21T11:08:53.083Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>/2019/05/12/KV-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/</loc>
+    
+    <lastmod>2019-07-21T11:08:48.270Z</lastmod>
     
   </url>
   
