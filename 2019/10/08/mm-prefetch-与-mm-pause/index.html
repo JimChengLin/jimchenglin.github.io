@@ -26,7 +26,7 @@
 <li>现代处理器有流水线和分支预测, 在 spin lock 的加锁过程中, 分支预测器会被训练成傻逼, 同时大量垃圾微指令塞满流水线.</li>
 </ul>
 <p>想象如下场景,</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (some_atomic_var.compare_exchange_weak(a, b)) &#123;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (!some_atomic_var.compare_exchange_weak(a, b)) &#123;&#125;</span><br></pre></td></tr></table></figure>
 <p>如果这个 <code>some_atomic_var</code> 一段时间内加锁不成功的话, 分支预测器会认定这个 loop 总是失败的, 这其实没有任何意义! 因为就算预测成功了, 也没有任何有意义的指令能够执行, 只能不断的 jump, jump, jump...</p>
 <p>CPU 在硬件层面还会 unroll loop, 然后一大堆 unroll 完的垃圾微指令堆满流水线.</p>
 <p>最好的策略是 CPU 啥也别干就老老实实等一会儿, 然后尝试 CAS 原子变量就好了.</p>
