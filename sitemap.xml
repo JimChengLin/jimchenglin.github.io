@@ -2,9 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2020/07/11/%E6%88%91%E4%B8%8E-Ta-%E7%9A%84%E5%92%8C%E8%A7%A3/</loc>
+    
+    <lastmod>2020-07-11T06:36:55.965Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>/2019/07/21/Go-Plan9-%E6%B1%87%E7%BC%96%E4%B8%8E-Intel-TSX-%E6%8C%87%E4%BB%A4%E9%9B%86/</loc>
+    
+    <lastmod>2020-07-11T05:55:40.629Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>/2020/01/21/2019-%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</loc>
     
-    <lastmod>2020-01-20T17:57:55.053Z</lastmod>
+    <lastmod>2020-07-11T05:55:07.736Z</lastmod>
     
   </url>
   
@@ -19,13 +33,6 @@
     <loc>/2019/05/12/KV-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/</loc>
     
     <lastmod>2019-10-07T18:17:40.366Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>/2019/07/21/Go-Plan9-%E6%B1%87%E7%BC%96%E4%B8%8E-Intel-TSX-%E6%8C%87%E4%BB%A4%E9%9B%86/</loc>
-    
-    <lastmod>2019-10-07T17:21:45.161Z</lastmod>
     
   </url>
   
